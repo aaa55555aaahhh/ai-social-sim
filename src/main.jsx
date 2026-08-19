@@ -28,6 +28,7 @@ function App() {
   const [tab, setTab] = useState('nearby')
   const [refresh, setRefresh] = useState(0)
   const [systemOpen, setSystemOpen] = useState(false)
+  const [realm, setRealm] = useState('sim')
   const [activeChat, setActiveChat] = useState(null)
   const [setupOpen, setSetupOpen] = useState(() => !readProfile().orientation)
   useEffect(() => localStorage.setItem('nocturne-profile', JSON.stringify(profile)), [profile])
@@ -38,12 +39,14 @@ function App() {
   }, [profile.orientation, refresh])
   if (setupOpen) return <Setup profile={profile} setProfile={setProfile} onDone={() => setSetupOpen(false)} />
   return <div className="phone-app">
-    <header className="app-top"><div><span className="app-kicker">NOCTURNE / 18+</span><strong>聊骚模拟器</strong></div><button className="top-icon" aria-label="系统设置" onClick={() => setSystemOpen(true)}><Settings2 size={18}/></button></header>
-    <main>{activeChat ? <Chat person={activeChat} onBack={() => setActiveChat(null)} /> : <Screen tab={tab} profile={profile} candidates={candidates} refresh={() => setRefresh(v => v + 1)} onChat={setActiveChat} onEdit={() => setSetupOpen(true)} />}</main>
-    {!activeChat && <nav className="bottom-nav">{[["nearby", "附近", Compass], ["match", "匹配", Heart], ["chat", "聊天", MessageCircle], ["me", "个人", UserRound]].map(([id, label, Icon]) => <button key={id} className={tab === id ? 'current' : ''} onClick={() => setTab(id)}><Icon size={18}/><span>{label}</span></button>)}</nav>}
+    <header className="app-top"><div><span className="app-kicker">NOCTURNE / 18+</span><strong>{realm === 'sim' ? '聊骚模拟器' : '现实世界'}</strong></div><div className="top-actions"><button className="realm-button" onClick={() => { setRealm(realm === 'sim' ? 'real' : 'sim'); setActiveChat(null) }}>{realm === 'sim' ? '现实世界' : '返回模拟器'}</button><button className="top-icon" aria-label="系统设置" onClick={() => setSystemOpen(true)}><Settings2 size={18}/></button></div></header>
+    <main>{activeChat ? <Chat person={activeChat} onBack={() => setActiveChat(null)} /> : realm === 'real' ? <RealityView profile={profile} /> : <Screen tab={tab} profile={profile} candidates={candidates} refresh={() => setRefresh(v => v + 1)} onChat={setActiveChat} onEdit={() => setSetupOpen(true)} />}</main>
+    {!activeChat && realm === 'sim' && <nav className="bottom-nav">{[["nearby", "附近", Compass], ["match", "匹配", Heart], ["chat", "聊天", MessageCircle], ["me", "个人", UserRound]].map(([id, label, Icon]) => <button key={id} className={tab === id ? 'current' : ''} onClick={() => setTab(id)}><Icon size={18}/><span>{label}</span></button>)}</nav>}
     {systemOpen && <System profile={profile} setProfile={setProfile} onClose={() => setSystemOpen(false)} />}
   </div>
 }
+
+function RealityView({ profile }) { return <section className="screen reality-view"><span className="app-kicker">TODAY / 2026.08.20</span><h2>AI 记事</h2><p className="reality-lede">现实身份：{profile.name} · {profile.age} 岁</p><article className="reality-note"><strong>今晚的剧情</strong><h3>雨停之后，去见一个新朋友</h3><p>你在旧港区的唱片店门口遇见一位新朋友。关系从一句自然的问候开始，今晚适合把屏幕里的好奇带到现实。</p><span>关系推进 +8 · 氛围值 72</span></article><div className="reality-row"><strong>人际关系</strong><span>3 位已记录人物</span></div><div className="reality-row"><strong>地图</strong><span>旧港区 · 夜间开放</span></div></section> }
 
 function Setup({ profile, setProfile, onDone }) {
   const [draft, setDraft] = useState(profile)
